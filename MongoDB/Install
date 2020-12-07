@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ ! -d Build ]; then
+  echo "Creation du répertoire cible"
+  mkdir Build
+fi
+
+buildimg=$(docker image ls| grep temp/mongo)
+if [ "" == "$buildimg" ]; then
+  # Pas d'image de compilation,    
+  echo "Image de travail..."
+fi
+docker image build -f Dockerfile.debian -t temp/mongo:debian .

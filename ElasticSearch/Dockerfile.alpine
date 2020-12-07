@@ -1,0 +1,10 @@
+FROM alpine:3.12
+LABEL author="Serge NOEL <serge.noel@easylinux.fr>"
+
+RUN apk add git openjdk11 gradle
+RUN mkdir /app
+WORKDIR /app
+
+RUN git clone https://github.com/elastic/elasticsearch
+RUN cd /app/elasticsearch \
+    && ./gradlew localDistro
