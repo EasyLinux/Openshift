@@ -1,6 +1,7 @@
 FROM  debian:buster
 LABEL author="Serge NOEL <serge.noel@easylinux.fr>" \
-      app="MariaDb" 
+      description="MariaDb" \
+      version="debian"
 
 RUN apt-get update \
     && apt-get install -y mariadb-server \
