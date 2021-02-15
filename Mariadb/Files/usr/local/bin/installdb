@@ -1,6 +1,13 @@
 #!/bin/sh
 
+if [ -f /etc/debian_version ]; then
+  DISTRIB="Debian"
+else
+  DISTRIB="Alpine"
+fi
+
 clear
+echo "Creation de la base sous $DISTRIB"
 echo -n "Mot de passe root : "
 read ROOTPASS
 echo -n "Nom de la base : "
@@ -13,10 +20,18 @@ read PASS
 mysql_install_db --user=mysql --datadir=/var/lib/mysql
 echo "Install User Database"
 echo -n "  Launch mariadb server ...  "
+
+if [ "$DISTRIB" = "Debian" ]; then 
+  mkdir /var/run/mysqld
+  chown mysql: /var/run/mysqld
+fi
 exec mysqld_safe & 2> /dev/null
+sleep 2
 echo "OK"
 echo -n "  Add mariadb-client ...     " 
-apk add mariadb-client > /dev/null
+if [ "$DISTRIB" = "Alpine" ]; then 
+  apk add mariadb-client > /dev/null
+fi
 echo "OK"
 echo -n "  Assigning $HOSTNAME as mysql_root_password  "
 /usr/bin/mysqladmin -u root password "$ROOTPASS"
@@ -32,7 +47,9 @@ echo -n "  Dropping test database    "
 echo "DROP DATABASE test;" | mysql -u root --password="$ROOTPASS"
 echo "OK"
 echo -n "  Remove mariadb-client     "
-apk del mariadb-client > /dev/null
+if [ "$DISTRIB" = "Alpine" ]; then 
+  apk del mariadb-client > /dev/null
+fi
 echo "OK"
 echo -n "  Cleaning                  "
 unset $ROOTPASS

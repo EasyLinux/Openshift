@@ -8,4 +8,7 @@ RUN wget https://downloads.graylog.org/releases/graylog/graylog-3.3.8.tgz \
     && tar zxvf  graylog-3.3.8.tgz \
     && rm  graylog-3.3.8.tgz
 
+COPY Files/ /
 VOLUME /etc/graylog 
+EXPOSE 9000
+CMD /usr/local/bin/launch:q

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ !-e /etc/graylog/graylog.conf ] ; then
+  mkdir -p /etc/graylog/server
+  cp /app/graylog-3.3.8/graylog.conf.example /etc/graylog/server/server.conf
+  echo "Please edit server.conf file !"
+fi
+
+cd /app/graylog-3.3.8
+exec java -jar graylog.jar server

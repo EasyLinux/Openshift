@@ -1,0 +1,48 @@
+version: '3'
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    environment:
+      - discovery.type=single-node
+    # ports:
+    #   - 9200:9200
+    #   - 9300:9300
+    volumes:
+      - ELASTICDATA:/usr/share/elasticsearch/data  
+
+  mongodb:
+    image: mongo
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - MONGODB:/data/db
+    # ports:
+        # - 27017:27017
+
+  graylog:
+    image: snoel/graylog 
+    ports:
+      - 7000:9000
+      - 5555:5555
+      - 514:514
+    volumes:
+      - CONF:/etc/graylog
+    depends_on:
+      - elasticsearch
+      - mongodb
+
+  Portainer:
+    image: portainer/portainer-ce
+    ports:
+      - 9000:9000
+    volumes:
+      - PORTAINER:/data 
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  CONF:
+  MONGODB:
+  ELASTICDATA:
+  PORTAINER:
