@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ ! -d "/var/lib/mysql/mysql" ]; then
+if [ ! -d "/var/lib/mysql/mysql/mysql" ]; then
   # Si le répertoire n'existe pas, alors on est sur le premier lancement
   if [ "$MYSQL_ROOT_PASS" = "" ]; then
    echo "No database present please :"
@@ -20,4 +20,4 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
 fi
 
 echo "Starting Mariadb server..."
-exec mysqld --user=mysql --datadir=/var/lib/mysql --console
+exec mysqld --user=mysql --datadir=/var/lib/mysql/mysql --console

@@ -1,0 +1,66 @@
+#!/bin/bash
+
+ERRNO=0
+ERRMSG="ERREUR:"
+if [ -z $HOST ] 
+then
+  ERRNO=1
+  ERRMSG="$ERRMSG\n  - La variable HOST est vide" 
+fi
+
+if [ -z $USER ] 
+then
+  ERRNO=1
+  ERRMSG="$ERRMSG\n  - La variable USER est vide" 
+fi
+
+if [ -z $PASSWORD ]
+then
+  ERRNO=1 
+  ERRMSG="$ERRMSG\n  - La variable PASSWORD est vide"
+fi
+if [ -z $RETENTION ]
+then
+  ERRNO=1 
+  ERRMSG="$ERRMSG\n  - La variable RETENTION est vide"
+fi
+if [ $ERRNO != 0 ]
+then
+  echo -e $ERRMSG
+  echo -e "\n\nUtilisation: "
+  echo "  Positionner les variables d'environnement HOST USER PASSWORD RETENTION"
+  echo "   - HOST      Serveur MariaDB"
+  echo "   - USER      Utilisateur autoriser pour la sauvegarde"
+  echo "   - PASSWORD  Mot de passe de l'utilisateur"
+  echo "   - RETENTION Nombre de jour de conservation des sauvegardes"
+  exit 1
+fi
+
+#  Date de sauvegarde
+DATE=$(date +"%Y%m%d")
+
+# Répertoire de base de la sauvegarde
+FOLDER="/app"
+
+# Liste des base à exclure
+SKIPDATABASES="Database|information_schema|performance_schema|mysql"
+
+mkdir -p $FOLDER/$DATE 
+
+# Liste des bases 
+DATABASES=$(mysql -u $USER -p$PASSWORD -h $HOST -e "SHOW DATABASES;" | grep -Ev "$SKIPDATABASES")
+
+for DB in $DATABASES;
+do
+  echo -n "Sauvegarde de $DB   "
+  mysqldump -h $HOST --force --opt --user=$USER -p$PASSWORD --skip-lock-tables --events --databases $DB | gzip > "$FOLDER/$DATE/$DB.sql.gz" 
+  echo "OK"
+done
+
+# Nettoyage des anciennes sauvegardes
+echo -n "Nettoyage des anciennes sauvegardes < $RETENTION jours  "
+find $FOLDER/* -mtime +$RETENTION -delete
+echo "OK"
+
+
+

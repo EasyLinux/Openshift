@@ -12,15 +12,16 @@ ENV NODE_ENV=production
 # that do not allow images running as root.
 RUN apk add nodejs npm \ 
     && adduser -u 5001 -D etherpad \ 
-    && mkdir -p /app/etherpad-lite && chown etherpad:0 /app/etherpad-lite
+    && mkdir -p /app/etherpad-lite 
 
-USER etherpad
+# USER etherpad
 WORKDIR /app/etherpad-lite
 COPY --chown=etherpad:0 ./etherpad-lite ./
 
 # install node dependencies for Etherpad
-RUN bin/installDeps.sh \
-    &&	rm -rf ~/.npm/_cacache
+RUN chmod a+x bin/installDeps.sh \
+    && bin/installDeps.sh \ 
+    && rm -rf ~/.npm/_cacache
 
 # plugins to install while building the container. By default no plugins are
 # installed.
@@ -35,11 +36,15 @@ ARG ETHERPAD_PLUGINS="ep_headings2 ep_align ep_comments_page ep_markdown ep_auth
 # able to split at spaces.
 RUN for PLUGIN_NAME in ${ETHERPAD_PLUGINS}; do npm install "${PLUGIN_NAME}" || exit 1; done
 
-# Copy the configuration file.
-COPY --chown=etherpad:0 ./etherpad-lite/settings.json.docker /opt/etherpad-lite/settings.json
+# Copy the configuration file. 
+# COPY --chown=etherpad:0 ./etherpad-lite/settings.json.docker /opt/etherpad-lite/settings.json
+# RUN chgrp -R root /app/etherpad-lite/node_modules
+RUN find /app -type d -exec chmod 777 {} \;  
 
 # Fix permissions for root group
-RUN chmod -R g=u .
+# RUN chmod -R g=u .
 
+# USER 5001
 EXPOSE 9001
+# node --experimental-worker node_modules/ep_etherpad-lite/node/server.js
 CMD ["node", "--experimental-worker", "node_modules/ep_etherpad-lite/node/server.js"]
