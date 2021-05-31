@@ -1,50 +1,77 @@
 #!/bin/sh
 
-if [ -f /etc/debian_version ]; then
-  DISTRIB="Debian"
-else
-  DISTRIB="Alpine"
-fi
+Errno=0
+ErrMsg=""
 
 clear
-echo "Creation de la base sous $DISTRIB"
-echo -n "Mot de passe root : "
-read ROOTPASS
-echo -n "Nom de la base : "
-read DB
-echo -n "Utilisateur de la base : "
-read USER
-echo -n "Mot de passe : "
-read PASS
+echo "Vérification des variables..."
+echo -n "  Mot de passe root "
+if [ "" = "$ROOT_PASSORD" ]
+then
+  Errno=1
+  ErrMsg="La variable ROOT_PASSWORD n'est pas définie\n"
+  echo "BAD"
+else 
+  echo "OK"
+fi
+echo -n "  Nom de la base "
+if [ "" = "$DATABASE" ]
+then
+  Errno=1
+  ErrMsg="La variable DATABASE n'est pas définie\n"
+  echo "BAD"
+else 
+  echo "OK"
+fi
+echo -n "  Utilisateur  "
+if [ "" = "$DB_USER" ]
+then
+  Errno=1
+  ErrMsg="La variable DB_USER n'est pas définie\n"
+  echo "BAD"
+else 
+  echo "OK"
+fi
+echo -n "  Mot de passe "
+if [ "" = "$DB_PASS" ]
+then
+  Errno=1
+  ErrMsg="La variable DB_PASS n'est pas définie\n"
+  echo "BAD"
+else 
+  echo "OK"
+fi
+if [ Errno = 1 ]
+then 
+  echo -e "ERREUR\n"
+  echo -e $ErrMsg
+  exit 1
+fi
 
 # Créer les tables 
 mysql_install_db --datadir=/var/lib/mysql/mysql
-echo "Install User Database"
+echo -e "\nInstall User Database"
 echo -n "  Launch mariadb server ...  "
 
-if [ "$DISTRIB" = "Debian" ]; then 
-  mkdir /var/run/mysqld
-  chown mysql: /var/run/mysqld
-else
-  mkdir -p /var/lib/mysql/run/mysqld
-fi
+mkdir -p /var/lib/mysql/run/mysqld
+
 exec mysqld_safe --datadir=/var/lib/mysql/mysql --skip-grant-tables & 2> /dev/null
 sleep 2
 echo "OK"
 
-echo -n "  Assigning $HOSTNAME ($ROOTPASS) as mysql_root_password  "
+echo -n "  Assigning $HOSTNAME () as mysql_root_password  "
 echo "FLUSH PRIVILEGES;"| mysql 
-echo "ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOTPASS';"| mysql 
+echo "ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PASSWORD';"| mysql 
 echo "OK"
 
-echo -n "  Creating Database $DB     "
-echo "CREATE DATABASE $DB;" | mysql -u root --password="$ROOTPASS"
+echo -n "  Creating Database $DATABASE     "
+echo "CREATE DATABASE $DATABASE;" | mysql
 echo "OK"  
 echo -n "  Granting full rights on $USER with password ($PASS) on $DB  "
-echo "GRANT ALL PRIVILEGES ON $DB.* TO '$USER'@'%' IDENTIFIED BY '$PASS';" | mysql -u root --password="$ROOTPASS"
+echo "GRANT ALL PRIVILEGES ON $DATABASE.* TO '$DB_USER'@'%' IDENTIFIED BY '$DB_PASS';" | mysql
 echo "OK"
 echo -n "  Dropping test database    "
-echo "DROP DATABASE test;" | mysql -u root --password="$ROOTPASS"
+echo "DROP DATABASE test;" | mysql
 echo "OK"
 
 echo -n "  Cleaning                  "
@@ -55,5 +82,5 @@ unset $DB
 kill -TERM $(pidof mysqld)
 echo "OK"
 
-echo "La base est prête"
-echo "Veuillez relancer le container"
+echo -n "La base est prête\n"
+

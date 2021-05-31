@@ -2,21 +2,8 @@
 
 if [ ! -d "/var/lib/mysql/mysql/mysql" ]; then
   # Si le répertoire n'existe pas, alors on est sur le premier lancement
-  if [ "$MYSQL_ROOT_PASS" = "" ]; then
-   echo "No database present please :"
-   echo "   1- go inside container"
-   echo "   2- type 'installdb' and follow instructions"
-   echo "   3- restart container"
-   echo ""
-   echo 
-   echo "Aucune base de donnée !"
-   echo "   1- entrer dans le conteneur"
-   echo "   2- lancer 'installdb' et suivre les instructions"
-   echo "   3- relancer le conteneur"
-   sleep 3600
-   exit 1
-  fi
-
+  # Lancement d'installdb
+  installdb
 fi
 
 echo "Starting Mariadb server..."
