@@ -1,4 +1,4 @@
-FROM alpine:3.12
+FROM alpine:3.13
 LABEL author="Serge NOEL <serge.noel@easylinux.fr>" 
 
 RUN apk add mariadb mariadb-client \

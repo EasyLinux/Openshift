@@ -6,11 +6,11 @@ ErrMsg=""
 clear
 echo "Vérification des variables..."
 echo -n "  Mot de passe root "
-if [ "" = "$ROOT_PASSORD" ]
+if [ "" = "$ROOT_PASSWORD" ]
 then
   Errno=1
-  ErrMsg="La variable ROOT_PASSWORD n'est pas définie\n"
-  echo "BAD"
+  ErrMsg="  La variable ROOT_PASSWORD n'est pas définie\n"
+  echo "-"
 else 
   echo "OK"
 fi
@@ -18,8 +18,8 @@ echo -n "  Nom de la base "
 if [ "" = "$DATABASE" ]
 then
   Errno=1
-  ErrMsg="La variable DATABASE n'est pas définie\n"
-  echo "BAD"
+  ErrMsg="$ErrMsg  La variable DATABASE n'est pas définie\n"
+  echo "-"
 else 
   echo "OK"
 fi
@@ -27,8 +27,8 @@ echo -n "  Utilisateur  "
 if [ "" = "$DB_USER" ]
 then
   Errno=1
-  ErrMsg="La variable DB_USER n'est pas définie\n"
-  echo "BAD"
+  ErrMsg="$ErrMsg  La variable DB_USER n'est pas définie\n"
+  echo "-"
 else 
   echo "OK"
 fi
@@ -36,50 +36,47 @@ echo -n "  Mot de passe "
 if [ "" = "$DB_PASS" ]
 then
   Errno=1
-  ErrMsg="La variable DB_PASS n'est pas définie\n"
-  echo "BAD"
+  ErrMsg="$ErrMsg  La variable DB_PASS n'est pas définie\n"
+  echo "-"
 else 
   echo "OK"
 fi
-if [ Errno = 1 ]
+if [ $Errno = 1 ]
 then 
-  echo -e "ERREUR\n"
+  echo -e "\n\nERREUR\n"
   echo -e $ErrMsg
-  exit 1
+  sleep 7200
 fi
 
 # Créer les tables 
-mysql_install_db --datadir=/var/lib/mysql/mysql
 echo -e "\nInstall User Database"
 echo -n "  Launch mariadb server ...  "
-
+mkdir -p /var/lib/mysql/mysql
 mkdir -p /var/lib/mysql/run/mysqld
+mysql_install_db --datadir=/var/lib/mysql/mysql
+
+
 
 exec mysqld_safe --datadir=/var/lib/mysql/mysql --skip-grant-tables & 2> /dev/null
 sleep 2
 echo "OK"
 
-echo -n "  Assigning $HOSTNAME () as mysql_root_password  "
-echo "FLUSH PRIVILEGES;"| mysql 
-echo "ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PASSWORD';"| mysql 
-echo "OK"
-
-echo -n "  Creating Database $DATABASE     "
-echo "CREATE DATABASE $DATABASE;" | mysql
-echo "OK"  
-echo -n "  Granting full rights on $USER with password ($PASS) on $DB  "
-echo "GRANT ALL PRIVILEGES ON $DATABASE.* TO '$DB_USER'@'%' IDENTIFIED BY '$DB_PASS';" | mysql
-echo "OK"
-echo -n "  Dropping test database    "
-echo "DROP DATABASE test;" | mysql
-echo "OK"
+echo -n "  Creating DATABASE $DATABASE WITH USER $DB_USER" 
+echo "FLUSH PRIVILEGES; 
+ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PASSWORD';
+CREATE DATABASE $DATABASE;
+GRANT ALL PRIVILEGES ON $DATABASE.* TO '$DB_USER'@'%' IDENTIFIED BY '$DB_PASS';
+DROP DATABASE test;
+" | mysql
+echo "  OK"
 
 echo -n "  Cleaning                  "
-unset $ROOTPASS
-unset $PASS
-unset $USER
-unset $DB
-kill -TERM $(pidof mysqld)
+unset $ROOT_PASSWORD
+unset $DB_PASS
+unset $DB_USER
+unset $DATABASE
+kill -TERM $(pidof mysqld_safe mysqld mariadbd)
+sleep 5
 echo "OK"
 
 echo -n "La base est prête\n"
